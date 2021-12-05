@@ -1,0 +1,2 @@
+s1|file|ack
+File inviato dal Server.
