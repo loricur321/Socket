@@ -20,6 +20,7 @@ namespace Client
             //Bind e connect
             var socket = new Socket(localPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Bind(localPoint);
+            //Effettuo la connessione al server
             socket.Connect(endpoint);
 
             do
@@ -28,7 +29,7 @@ namespace Client
                 {
                     //invio dati
                     Console.WriteLine("Inserire il messaggio da inviare al server: ");
-                    var msg = Console.ReadLine();
+                    var msg = Console.ReadLine().ToLower();
                     //formato del messaggio
                     var buffer = System.Text.Encoding.UTF8.GetBytes(msg);
                     socket.Send(buffer);
@@ -36,7 +37,7 @@ namespace Client
                     //Ricevo la risposta dal sevrer
                     var bufferReceive = new byte[1024];
                     int lenght = socket.Receive(bufferReceive);
-                    var msgServer = System.Text.Encoding.UTF8.GetString(bufferReceive[0..lenght]);
+                    var msgServer = System.Text.Encoding.UTF8.GetString(bufferReceive[0..lenght]).ToLower();
 
                     //In caso il server invii il messaggio "s1|stop|ack|" chiudo il programma Client
                     if (msgServer == "s1|stop|ack|")
@@ -57,9 +58,10 @@ namespace Client
 
                 if (Console.ReadLine() != "si")
                 {
-                    socket.Close(); //chiudo la socket lato Client
-                    break;
+                    socket.Close();//Chiudo la socket lato Client dal server
+                    Environment.Exit(0);
                 }
+                    
             } while (true);
         }
     }

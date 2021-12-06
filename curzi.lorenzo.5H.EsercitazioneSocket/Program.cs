@@ -50,6 +50,7 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
                     catch
                     {
                         Console.WriteLine("Connessione interrotta dal Client.");
+                        socket.Close();
                         clientSocket.Close();
                         break;
                     }
@@ -58,10 +59,11 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
                     if (result == 0)
                     {
                         clientSocket.Close();
+                        socket.Close();
                         break;
                     }
 
-                    string msgClient = System.Text.Encoding.UTF8.GetString(buffer[0..result]);
+                    string msgClient = System.Text.Encoding.UTF8.GetString(buffer[0..result]).ToLower();
 
                     //Se il client invia il messaggio "c1|stop|" il server invia a sua volta "s1|stop|ack|" e termino il programma
                     if (msgClient == "c1|stop|")
@@ -69,6 +71,7 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
                         byte[] bufferSend = System.Text.Encoding.UTF8.GetBytes("s1|stop|ack|");
                         clientSocket.Send(bufferSend);
                         clientSocket.Close();
+                        socket.Close();
                         Console.WriteLine("Comunicazione terminata con s1|stop|ack|");
                         Environment.Exit(0);
                     }
@@ -89,6 +92,7 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
                 if (Console.ReadLine() != "si")
                 {
                     clientSocket.Close(); //chiudo la comunicazione col client
+                    socket.Close();
                     break;
                 }
             } while (true);
