@@ -22,22 +22,23 @@ namespace Client
             socket.Bind(localPoint);
             //Effettuo la connessione al server
             socket.Connect(endpoint);
-
             do
             {
                 do
                 {
                     //invio dati
                     Console.WriteLine("Inserire il messaggio da inviare al server: ");
-                    var msg = Console.ReadLine().ToLower();
+                    var msg = Console.ReadLine();
                     //formato del messaggio
                     var buffer = System.Text.Encoding.UTF8.GetBytes(msg);
-                    socket.Send(buffer);
+                    int send = socket.Send(buffer);
+
+                    if (send == 0) break;
 
                     //Ricevo la risposta dal sevrer
                     var bufferReceive = new byte[1024];
                     int lenght = socket.Receive(bufferReceive);
-                    var msgServer = System.Text.Encoding.UTF8.GetString(bufferReceive[0..lenght]).ToLower();
+                    var msgServer = System.Text.Encoding.UTF8.GetString(bufferReceive[0..lenght]);
 
                     //In caso il server invii il messaggio "s1|stop|ack|" chiudo il programma Client
                     if (msgServer == "s1|stop|ack|")
@@ -48,15 +49,15 @@ namespace Client
 
                     Console.WriteLine($"Messaggio di ritorno del server: {msgServer}");
 
-                    Console.WriteLine("Si vuole inviare un altro messaggio al server? (si, no)");
+                    Console.WriteLine("Si vuole inviare un altro messaggio al server? Premere ESC per uscire dalla comunicazione");
 
-                    if (Console.ReadLine() != "si")
+                    if (Console.ReadKey().Key == ConsoleKey.Escape)
                         break;
                 } while (true);
 
-                Console.WriteLine("Si vuole stabile una nuova connessione con il server? (si, no)");
+                Console.WriteLine("Si vuole stabile una nuova connessione con il server? Premere ESC per chiudere la connessione");
 
-                if (Console.ReadLine() != "si")
+                if (Console.ReadKey().Key == ConsoleKey.Escape)
                 {
                     socket.Close();//Chiudo la socket lato Client dal server
                     Environment.Exit(0);

@@ -1,4 +1,8 @@
-﻿using System;
+﻿using curzi.lorenzo._5H.EsercitazioneSocket.Models;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
@@ -15,6 +19,8 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
             const int BACKLOG = 128; //numeri di host in coda a cui il server può rispondere
 
             const string FILEPATH = @"..\..\..\..\fileServer.txt";
+
+            const string JSONPATH = @"..\..\..\..\testJson.json";
 
             var endPoint = new IPEndPoint(IPAddress.Loopback, PORT); //creo l'enpoint specificando la porta del server
 
@@ -63,7 +69,7 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
                         break;
                     }
 
-                    string msgClient = System.Text.Encoding.UTF8.GetString(buffer[0..result]).ToLower();
+                    string msgClient = System.Text.Encoding.UTF8.GetString(buffer[0..result]);
 
                     //Se il client invia il messaggio "c1|stop|" il server invia a sua volta "s1|stop|ack|" e termino il programma
                     if (msgClient == "c1|stop|")
@@ -83,19 +89,54 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
                         continue;
                     }
 
+                    //Se il client invia il messaggio "c1|json|" il server il file crea il file testJson.json e lo invia al client
+                    if (msgClient == "c1|json|")
+                    {
+                        CreateJson(JSONPATH);
+                        clientSocket.SendFile(JSONPATH);
+
+                        continue;
+                    }
+
                     Console.WriteLine($"Il client ha scritto: {msgClient}");
                     clientSocket.Send(buffer);
                 } while (true);
 
-                Console.WriteLine("Si desidera stabile una nuova connessione col client? (si, no)");
+                Console.WriteLine("Si desidera stabilire una nuova connessione col client? Premere ESC per terminare la connessione");
 
-                if (Console.ReadLine() != "si")
+                if (Console.ReadKey().Key == ConsoleKey.Escape)
                 {
                     clientSocket.Close(); //chiudo la comunicazione col client
                     socket.Close();
                     break;
                 }
             } while (true);
+        }
+
+        static void CreateJson(string JSONPATH)
+        {
+            List<Employee> employee = new List<Employee>();
+
+            employee.Add(
+                new Employee("AAAA", "AAAALast", "407-111-1111")
+                );
+
+            employee.Add(
+                new Employee("BBBB", "BBBBLast", "407-222-2222")
+                );
+
+            Customer customer = new Customer("10", "company one", employee); //Creo l'istanza cliente da serializzare nel file Json
+
+            string jsonText = JsonConvert.SerializeObject(customer, Formatting.Indented);
+
+            if (!File.Exists(JSONPATH))
+                File.WriteAllText(JSONPATH, jsonText);
+            else
+            {
+                File.Delete(JSONPATH);
+                File.WriteAllText(JSONPATH, jsonText);
+            }
+
         }
     }
 }
