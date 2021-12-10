@@ -1,0 +1,26 @@
+{
+  "Customer_id": "10",
+  "Customer_name": "company one",
+  "Employees": [
+    {
+      "First_name": "AAAA",
+      "Last_name": "AAAALast",
+      "Phone": "407-111-1111"
+    },
+    {
+      "First_name": "BBBB",
+      "Last_name": "BBBBLast",
+      "Phone": "407-222-2222"
+    },
+    {
+      "First_name": "mario",
+      "Last_name": "rossi",
+      "Phone": "333"
+    },
+    {
+      "First_name": "giacomo",
+      "Last_name": "verdi",
+      "Phone": "444"
+    }
+  ]
+}
