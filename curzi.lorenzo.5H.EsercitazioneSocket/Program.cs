@@ -10,6 +10,7 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
 {
     class Program
     {
+        const string JSONPATH = @"..\..\..\..\testJson.json"; //variabile globale
         static void Main(string[] args)
         {
             Console.WriteLine("Sono un Server");
@@ -19,8 +20,6 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
             const int BACKLOG = 128; //numeri di host in coda a cui il server può rispondere
 
             const string FILEPATH = @"..\..\..\..\fileServer.txt";
-
-            const string JSONPATH = @"..\..\..\..\testJson.json";
 
             var endPoint = new IPEndPoint(IPAddress.Loopback, PORT); //creo l'enpoint specificando la porta del server
 
@@ -92,14 +91,32 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
                     //Se il client invia il messaggio "c1|json|" il server il file crea il file testJson.json e lo invia al client
                     if (msgClient == "c1|json|")
                     {
-                        CreateJson(JSONPATH);
+                        CreateJson();
                         clientSocket.SendFile(JSONPATH);
 
                         continue;
                     }
 
-                    Console.WriteLine($"Il client ha scritto: {msgClient}");
-                    clientSocket.Send(buffer);
+                    //Nel caso l'aggiunta di un employee riscontri un errore il server si comporterà da echo server per evitare interruzioni
+                    try
+                    {
+                        //con c1|employee| do al client la possibilità di aggiungre un employee al file json
+                        //c1|customer|nome|cognome|phone
+                        //0     1       2     3      4
+
+                        var splittedMSG = msgClient.Split("|");
+                        if (splittedMSG[1] == "employee")
+                        {
+                            AddEmployee(splittedMSG[2], splittedMSG[3], splittedMSG[4]);
+                            clientSocket.SendFile(JSONPATH);
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine($"Il client ha scritto: {msgClient}");
+                        clientSocket.Send(buffer);
+                    }
                 } while (true);
 
                 Console.WriteLine("Si desidera stabilire una nuova connessione col client? Premere ESC per terminare la connessione");
@@ -113,20 +130,23 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
             } while (true);
         }
 
-        static void CreateJson(string JSONPATH)
+        /// <summary>
+        /// Creazione del file Json contenente customer e employees
+        /// </summary>
+        /// <param name="employee">employee aggiunto dal client</param>
+        static void CreateJson(Employee employee = null)
         {
-            List<Employee> employee = new List<Employee>();
+            List<Employee> employees = new List<Employee>();
 
-            employee.Add(
-                new Employee("AAAA", "AAAALast", "407-111-1111")
-                );
+            Customer c = ReadJson(); //Ricavo le informazioni precendentemente salvate nel file deserializzando il file stesso
 
-            employee.Add(
-                new Employee("BBBB", "BBBBLast", "407-222-2222")
-                );
+            //aggiungo gli employee presenti nel file più quello aggiunto dal client
+            employees.AddRange(c.Employees);
+            if(employee != null) employees.Add(employee);
 
-            Customer customer = new Customer("10", "company one", employee); //Creo l'istanza cliente da serializzare nel file Json
+            Customer customer = new Customer(c.Customer_id, c.Customer_name, employees); //Creo la nuova istanza customer da serializzare nel file
 
+            //Serializzo customer e salvo il file json
             string jsonText = JsonConvert.SerializeObject(customer, Formatting.Indented);
 
             if (!File.Exists(JSONPATH))
@@ -138,5 +158,19 @@ namespace curzi.lorenzo._5H.EsercitazioneSocket
             }
 
         }
+
+        /// <summary>
+        /// Metodo per deserializzare il contenuto del file Json
+        /// </summary>
+        /// <returns>Istanza Customer letta dal file</returns>
+        static Customer ReadJson() => JsonConvert.DeserializeObject<Customer>(File.ReadAllText(JSONPATH));
+
+        /// <summary>
+        /// Aggiunta di un employee al file Json
+        /// </summary>
+        /// <param name="firstName">Nome </param>
+        /// <param name="lastName">Cognome</param>
+        /// <param name="phone">Telefono</param>
+        static void AddEmployee(string firstName, string lastName, string phone) => CreateJson(new Employee(firstName, lastName, phone));
     }
 }
